@@ -31,7 +31,7 @@ pnpm preview      # previsualizar el build de producción
    - ☐ **Es el campo del token** — comportamiento de radio: solo un campo a la vez puede tenerlo marcado. Este campo **no participa** en el cálculo del hash; solo **recibe** el resultado.
    - ☐ **Participa en el token** — múltiples campos pueden marcarse. El **orden de arriba a abajo** en el formulario es el orden de hasheo.
 4. El token se **recalcula automáticamente** con cada edición de cualquier campo del formulario (watch reactiva).
-5. **Output**: el JSON resultante con todos los cambios aplicados y el campo token actualizado, respetando la misma estructura de entrada.
+5. **Output**: se genera con el botón «Generar JSON con token» y la salida se **actualiza automáticamente** al editar cualquier campo: el JSON resultante con todos los cambios aplicados y el campo token actualizado, respetando la misma estructura de entrada (los campos vacíos se conservan tal cual).
 
 ### Ejemplo
 
@@ -51,6 +51,7 @@ El formulario mostrará 4 campos hoja (`nombre`, `edad`, `direccion.calle`, `dir
 ## Especificación del algoritmo (SHA-256)
 
 1. Recoger los **valores** de los campos marcados "participa en el token", **en orden de aparición en el formulario** (arriba → abajo, que coincide con el orden del JSON original).
+   - **Regla de vacíos**: un campo cuyo valor esté vacío (cadena vacía o solo espacios en blanco) **se omite de la cadena**; el resto se concatena en su orden. Solo se salta si está vacío: con cualquier valor participa normalmente.
 2. Concatenar los valores **directamente, sin separador** (ej. `"Juan" + "25"` → `"Juan25"`).
    - Cada valor se convierte a su representación en texto según su tipo seleccionado (ver reglas de tipo abajo).
 3. Calcular **SHA-256** sobre esa cadena (UTF-8).
@@ -75,13 +76,14 @@ Cada campo hoja tiene un `select` con estos tipos:
 | -------- | -------------------------------- | --------------------------------- |
 | `string` | cualquiera                       | string                            |
 | `int`    | entero                           | número entero                     |
-| `double` | número (hasta ~15-16 dígitos)    | número                            |
-| `decimal`| número con decimales             | número                            |
+| `double` | número; admite notación exponencial (ej. 1.5e10) | número                   |
+| `decimal`| número con punto decimal (ej. 12.50) | número                           |
 | `bool`   | `true` / `false`                 | booleano                          |
 | `date`   | fecha `YYYY-MM-DD`               | string ISO de fecha               |
 | `datetime` | fecha y hora ISO 8601          | string ISO de fecha-hora           |
 | `array`  | JSON array válido                | array                             |
 | `object` | JSON object válido               | objeto                            |
+| `null`   | — (campo fijo, sin edición)      | `null`                            |
 
 Al editar el valor de un campo, la representación usada para el hash es:
 - `string`, `date`, `datetime`: el texto tal cual.
@@ -96,6 +98,15 @@ Al editar el valor de un campo, la representación usada para el hash es:
 3. Algún valor editado no coincide con su tipo de dato seleccionado.
 4. (Implícito) Hay campos marcados "participa" pero el cálculo del hash falla.
 
+## Campos vacíos (casos de prueba)
+
+Como la herramienta es para testear, los campos vacíos están permitidos:
+
+- El JSON de salida **puede conservar campos vacíos**: `""` es un valor válido y se transmite tal cual.
+- Si un campo que **participa en el token** está vacío, **se omite de la cadena a hashear** (ver reglas del algoritmo); el resto de los campos marcados se concatena en su orden.
+- Un campo vacío **no exime de la validación de tipo**: si su tipo es `string`, vacío es válido; si es `int`, `bool`, `date`, etc. y su tipo no admite vacío, la validación falla y se bloquea la generación. (Al parsear, un `""` se infiere como `string` por defecto.)
+- Se sigue **exigiendo** marcar un campo como "es el campo del token" para poder generar el JSON de salida.
+
 ## Estructura de archivos propuesta
 
 ```
@@ -103,9 +114,10 @@ src/
 ├── App.vue                       # layout principal
 ├── components/
 │   ├── JsonInputForm.vue         # textarea de entrada + botón enviar
-│   ├── EditableFieldsForm.vue    # grilla de campos editados + output
+│   ├── EditableFieldsForm.vue    # grilla de campos editados
 │   ├── FieldRow.vue              # key + input + select de tipo + checkboxes
-│   └── TypeSelect.vue            # select de tipos de dato
+│   ├── TypeSelect.vue            # select de tipos de dato
+│   └── JsonOutput.vue            # botón "generar" + JSON de salida con token
 ├── composables/
 │   ├── useJsonForm.ts            # parseo, estado de campos, validación
 │   └── useSha256.ts              # cálculo del token con Web Crypto
@@ -119,5 +131,6 @@ src/
 - Nombres en inglés para código, componentes y variables; documentación en español.
 - Mantener la estructura del JSON de salida idéntica a la de entrada: mismo orden de keys, mismo anidamiento, solo cambia el valor del campo token (y los valores editados por el usuario).
 - Un solo campo con "es el campo del token" a la vez: marcar uno desmarca el anterior.
+- El campo del token es **siempre de tipo `string`**: al marcarlo se bloquea su select de tipo, su valor del formulario se sincroniza con el hash generado y en la salida se escribe el hash calculado.
 - El recálculo del token debe ser reactivo (se ejecuta en cada cambio de cualquier campo).
 - No añadir dependencias para el hash: usar `crypto.subtle` del navegador.
