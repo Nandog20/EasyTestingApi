@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import EditableFieldsForm from './components/EditableFieldsForm.vue'
+import EndpointTitleInput from './components/EndpointTitleInput.vue'
 import JsonInputForm from './components/JsonInputForm.vue'
 import JsonOutput from './components/JsonOutput.vue'
 import { useJsonForm } from './composables/useJsonForm'
@@ -26,6 +27,8 @@ const {
       <p class="app__subtitle">
         Pega un JSON, conviértelo en formulario editable y elige qué campos intervienen en el token.
       </p>
+
+      <EndpointTitleInput class="app__endpoint" />
     </header>
 
     <JsonInputForm :error="parseError" @submit="applyJson" />
@@ -87,6 +90,11 @@ const {
 .app__subtitle {
   margin: 0;
   color: var(--color-muted);
+}
+
+.app__endpoint {
+  margin-top: 1rem;
+  max-width: 420px;
 }
 
 .app__section {

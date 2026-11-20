@@ -97,6 +97,16 @@ src/
     └── index.ts                  # FieldType, LeafField
 ```
 
+## Despliegue (GitHub Pages)
+
+El proyecto se publica automáticamente en **GitHub Pages** mediante el workflow de
+[GitHub Actions](./.github/workflows/deploy.yml): en cada *push* a `main` se ejecuta
+`pnpm build` y el build se despliega en
+**https://nandog20.github.io/EasyTestingApi/**
+
+Único paso manual (solo una vez): en el repositorio → *Settings → Pages → Build and
+deployment → Source* → seleccionar **GitHub Actions**.
+
 ## Licencia
 
 Este proyecto está bajo la **Licencia MIT**.
