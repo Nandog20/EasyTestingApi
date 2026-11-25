@@ -1,5 +1,6 @@
 {
   "name": "easytestingapi",
+  "homepage": "https://Nandog20.github.io/EasyTestingApi/",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -11,6 +12,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "gh-pages": "^6.3.0",
     "vue": "^3.5.42"
   },
   "devDependencies": {

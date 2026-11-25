@@ -7,7 +7,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
   // En GitHub Pages la app vive bajo /EasyTestingApi/; en local, en la raíz.
-  base: process.env.GITHUB_ACTIONS === 'true' ? '/EasyTestingApi/' : '/',
+  base: "/EasyTestingApi",
   plugins: [
     vue(),
     vueDevTools(),
